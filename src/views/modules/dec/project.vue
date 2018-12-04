@@ -1,13 +1,28 @@
 <template>
-  <div class="mod-user">
+  <div class="mod-config">
     <el-form :inline="true" :model="dataForm" @keyup.enter.native="getDataList()">
-      <el-form-item>
-        <el-input v-model="dataForm.userName" placeholder="用户名" clearable></el-input>
+      <el-form-item label="项目名称">
+        <el-input v-model="dataForm.name" placeholder="项目名称"></el-input>
+      </el-form-item>
+      <el-form-item label="设计师">
+        <el-input v-model="dataForm.designerName" placeholder="设计师"></el-input>
+      </el-form-item>
+      <el-form-item label="工长/PM">
+        <el-input v-model="dataForm.managerName" placeholder="项目经理"></el-input>
+      </el-form-item>
+      <el-form-item label="状态">
+        <el-select v-model="dataForm.status">
+          <el-option label="全部" value="-999">全部</el-option>
+          <el-option label='未开工' value="1">未开工</el-option>
+          <el-option label='施工中' value="2">施工中</el-option>
+          <el-option label="已竣工" value="4">已竣工</el-option>
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
-        <el-button v-if="isAuth('sys:user:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-        <el-button v-if="isAuth('sys:user:delete')" type="danger" @click="deleteHandle()" :disabled="dataListSelections.length <= 0">批量删除</el-button>
+        <el-button v-if="isAuth('dec:project:delete')" type="danger" @click="deleteHandle()"
+                   :disabled="dataListSelections.length <= 0">批量删除
+        </el-button>
       </el-form-item>
     </el-form>
     <el-table
@@ -23,54 +38,57 @@
         width="50">
       </el-table-column>
       <el-table-column
-        prop="userId"
+        prop="name"
         header-align="center"
         align="center"
-        width="80"
-        label="ID">
+        label="工地名称">
       </el-table-column>
       <el-table-column
-        prop="username"
+        prop="ownerName"
         header-align="center"
         align="center"
-        label="用户名">
+        label="业主姓名">
       </el-table-column>
       <el-table-column
-        prop="roles"
+        prop="ownerTel"
         header-align="center"
         align="center"
-        label="角色">
-        <template slot-scope="scope">
-          <el-tag size="small" v-if="scope.row.roles.length!==0">{{scope.row.roles.join(',')}}</el-tag>
-        </template>
+        label="业主电话">
       </el-table-column>
       <el-table-column
-        prop="email"
+        prop="designerName"
         header-align="center"
         align="center"
-        label="邮箱">
+        label="设计师">
       </el-table-column>
       <el-table-column
-        prop="mobile"
+        prop="managerName"
         header-align="center"
         align="center"
-        label="手机号">
+        label="工长">
       </el-table-column>
       <el-table-column
-        prop="status"
+        prop="startContractTime"
         header-align="center"
         align="center"
-        label="状态">
-        <template slot-scope="scope">
-          <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
-          <el-tag v-else size="small">正常</el-tag>
-        </template>
+        label="合同开始时间">
+      </el-table-column>
+      <el-table-column
+        prop="endContractTime"
+        header-align="center"
+        align="center"
+        label="合同结束时间">
+      </el-table-column>
+      <el-table-column
+        prop="remark"
+        header-align="center"
+        align="center"
+        label="备注信息">
       </el-table-column>
       <el-table-column
         prop="createTime"
         header-align="center"
         align="center"
-        width="180"
         label="创建时间">
       </el-table-column>
       <el-table-column
@@ -80,8 +98,8 @@
         width="150"
         label="操作">
         <template slot-scope="scope">
-          <el-button v-if="isAuth('sys:user:update')" type="text" size="small" @click="addOrUpdateHandle(scope.row.userId)">修改</el-button>
-          <el-button v-if="isAuth('sys:user:delete')" type="text" size="small" @click="deleteHandle(scope.row.userId)">删除</el-button>
+          <el-button type="text" size="small" @click="updateHandle(scope.row.id)">修改</el-button>
+          <el-button type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -94,45 +112,44 @@
       :total="totalPage"
       layout="total, sizes, prev, pager, next, jumper">
     </el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
   </div>
 </template>
 
 <script>
-  import AddOrUpdate from './user-add-or-update'
   export default {
-    data () {
+    data() {
       return {
         dataForm: {
-          userName: ''
+          name: '',
+          designerName: '',
+          managerName: '',
+          status: '-999'
         },
         dataList: [],
         pageIndex: 1,
         pageSize: 10,
         totalPage: 0,
         dataListLoading: false,
-        dataListSelections: [],
-        addOrUpdateVisible: false
+        dataListSelections: []
       }
     },
-    components: {
-      AddOrUpdate
-    },
-    activated () {
+    activated() {
       this.getDataList()
     },
     methods: {
       // 获取数据列表
-      getDataList () {
-        this.dataListLoading = true
+      getDataList() {
+        this.dataListLoading = true;
         this.$http({
-          url: this.$http.adornUrl('/sys/user/list'),
+          url: this.$http.adornUrl('/dec/project/list'),
           method: 'get',
           params: this.$http.adornParams({
             'page': this.pageIndex,
             'limit': this.pageSize,
-            'username': this.dataForm.userName
+            'name': this.dataForm.name,
+            'designerName': this.dataForm.designerName,
+            'managerName': this.dataForm.managerName,
+            'status': this.dataForm.status,
           })
         }).then(({data}) => {
           if (data && data.code === 0) {
@@ -145,42 +162,38 @@
           this.dataListLoading = false
         })
       },
+      updateHandle(){
+        alert('跳转到页面');
+      },
       // 每页数
-      sizeChangeHandle (val) {
-        this.pageSize = val
-        this.pageIndex = 1
-        this.getDataList()
+      sizeChangeHandle(val) {
+        this.pageSize = val;
+        this.pageIndex = 1;
+        this.getDataList();
       },
       // 当前页
-      currentChangeHandle (val) {
-        this.pageIndex = val
+      currentChangeHandle(val) {
+        this.pageIndex = val;
         this.getDataList()
       },
       // 多选
-      selectionChangeHandle (val) {
+      selectionChangeHandle(val) {
         this.dataListSelections = val
       },
-      // 新增 / 修改
-      addOrUpdateHandle (id) {
-        this.addOrUpdateVisible = true
-        this.$nextTick(() => {
-          this.$refs.addOrUpdate.init(id)
-        })
-      },
       // 删除
-      deleteHandle (id) {
-        var userIds = id ? [id] : this.dataListSelections.map(item => {
-          return item.userId
-        })
-        this.$confirm(`确定对[id=${userIds.join(',')}]进行[${id ? '删除' : '批量删除'}]操作?`, '提示', {
+      deleteHandle(id) {
+        let ids = id ? [id] : this.dataListSelections.map(item => {
+          return item.id
+        });
+        this.$confirm(`确定对[id=${ids.join(',')}]进行[${id ? '删除' : '批量删除'}]操作?`, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
           this.$http({
-            url: this.$http.adornUrl('/sys/user/delete'),
+            url: this.$http.adornUrl('/dec/project/delete'),
             method: 'post',
-            data: this.$http.adornData(userIds, false)
+            data: this.$http.adornData(ids, false)
           }).then(({data}) => {
             if (data && data.code === 0) {
               this.$message({
@@ -195,7 +208,7 @@
               this.$message.error(data.msg)
             }
           })
-        }).catch(() => {})
+        })
       }
     }
   }
