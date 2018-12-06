@@ -31,10 +31,10 @@
           <el-col :span="8">
             <el-card shadow="hover" :body-style="{padding: '0px'}">
               <div class="grid-content grid-con-1">
-                <i class="el-icon-lx-people grid-con-icon"></i>
+                <i class="el-icon-info grid-con-icon"></i>
                 <div class="grid-cont-right">
                   <div class="grid-num">100</div>
-                  <div>施工总数</div>
+                  <div>工地总数</div>
                 </div>
               </div>
             </el-card>
@@ -42,10 +42,10 @@
           <el-col :span="8">
             <el-card shadow="hover" :body-style="{padding: '0px'}">
               <div class="grid-content grid-con-2">
-                <i class="el-icon-lx-notice grid-con-icon"></i>
+                <i class="el-icon-success grid-con-icon"></i>
                 <div class="grid-cont-right">
                   <div class="grid-num">9</div>
-                  <div>施工中</div>
+                  <div>已竣工</div>
                 </div>
               </div>
             </el-card>
@@ -53,10 +53,10 @@
           <el-col :span="8">
             <el-card shadow="hover" :body-style="{padding: '0px'}">
               <div class="grid-content grid-con-3">
-                <i class="el-icon-lx-goods grid-con-icon"></i>
+                <i class="el-icon-warning grid-con-icon"></i>
                 <div class="grid-cont-right">
                   <div class="grid-num">80</div>
-                  <div>已竣工</div>
+                  <div>施工中</div>
                 </div>
               </div>
             </el-card>
@@ -168,7 +168,7 @@
   }
 
   .grid-con-2 .grid-num {
-    color: rgb(45, 140, 240);
+    color: rgb(100, 213, 114);
   }
 
   .grid-con-3 .grid-con-icon {
