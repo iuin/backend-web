@@ -143,11 +143,11 @@
       margin:  0 0 22px 0;
       font-size: 48px;
       font-weight: 400;
-      text-transform : uppercase;
+      /*text-transform : uppercase;*/
     }
     .brand-info__intro {
       margin: 10px 0;
-      font-size: 16px;
+      font-size: 20px;
       line-height: 1.58;
       opacity: .6;
     }

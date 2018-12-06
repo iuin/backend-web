@@ -13,9 +13,9 @@
       <el-form-item label="状态">
         <el-select v-model="dataForm.status">
           <el-option label="全部" value="-999">全部</el-option>
-          <el-option label='未开工' value="1">未开工</el-option>
-          <el-option label='施工中' value="2">施工中</el-option>
-          <el-option label="已竣工" value="4">已竣工</el-option>
+          <el-option label='未开工' value="0">未开工</el-option>
+          <el-option label='施工中' value="1">施工中</el-option>
+          <el-option label="已竣工" value="2">已竣工</el-option>
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -38,10 +38,23 @@
         width="50">
       </el-table-column>
       <el-table-column
-        prop="name"
+        header-align="center"
+        align="left"
+        label="工地名称">
+        <template slot-scope="scope">
+          <el-button type="text" size="small" @click="redirect2View(scope.row.id)">{{scope.row.name}}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column
         header-align="center"
         align="center"
-        label="工地名称">
+        width="90"
+        label="状态">
+        <template slot-scope="scope">
+          <el-tag v-if="scope.row.status === 0" size="small" type="info">未开工</el-tag>
+          <el-tag v-if="scope.row.status === 1" size="small" type="warning">施工中</el-tag>
+          <el-tag v-if="scope.row.status === 2" size="small" type="success">已完工</el-tag>
+        </template>
       </el-table-column>
       <el-table-column
         prop="ownerName"
@@ -68,21 +81,9 @@
         label="工长">
       </el-table-column>
       <el-table-column
-        prop="startContractTime"
-        header-align="center"
-        align="center"
-        label="合同开始时间">
-      </el-table-column>
-      <el-table-column
-        prop="endContractTime"
-        header-align="center"
-        align="center"
-        label="合同结束时间">
-      </el-table-column>
-      <el-table-column
         prop="remark"
         header-align="center"
-        align="center"
+        align="left"
         label="备注信息">
       </el-table-column>
       <el-table-column
@@ -98,7 +99,16 @@
         width="150"
         label="操作">
         <template slot-scope="scope">
-          <el-button type="text" size="small" @click="updateHandle(scope.row.id)">修改</el-button>
+          <el-button type="text" size="small" @click="modifyStatus(scope.row.id,scope.row.name, 1, '开工')"
+                     v-if="scope.row.status===0">开工
+          </el-button>
+          <el-button type="text" size="small" @click="modifyStatus(scope.row.id,scope.row.name, 2, '竣工')"
+                     v-if="scope.row.status===1">竣工
+          </el-button>
+          <el-button type="text" size="small" @click="modifyStatus(scope.row.id,scope.row.name, 1, '返工')"
+                     v-if="scope.row.status===2">返工
+          </el-button>
+          <el-button type="text" size="small" @click="redirect2Modify(scope.row.id)">修改</el-button>
           <el-button type="text" size="small" @click="deleteHandle(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
@@ -117,6 +127,7 @@
 
 <script>
   export default {
+    name: "project",
     data() {
       return {
         dataForm: {
@@ -162,9 +173,6 @@
           this.dataListLoading = false
         })
       },
-      updateHandle(){
-        alert('跳转到页面');
-      },
       // 每页数
       sizeChangeHandle(val) {
         this.pageSize = val;
@@ -209,6 +217,48 @@
             }
           })
         })
+      },
+      redirect2View(id) {
+        this.$router.push({
+          path: '/dec-view_project',
+          query: {
+            id: id
+          }
+        });
+      },
+      redirect2Modify(id) {
+        this.$router.push({
+          path: '/dec-new_project',
+          query: {
+            id: id
+          }
+        });
+      },
+      modifyStatus(id, name, status, operateMsg) {
+        this.$confirm('此操作将对工地:[' + name + ']进行' + operateMsg + '操作, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.$http({
+            url: this.$http.adornUrl(`/dec/project/modifyStatus/${id}`),
+            method: 'get',
+            params: this.$http.adornParams({'status': status})
+          }).then(({data}) => {
+            if (data && data.code === 0) {
+              this.$message({
+                message: '操作成功',
+                type: 'success',
+                duration: 500,
+                onClose: () => {
+                  this.getDataList()
+                }
+              })
+            } else {
+              this.$message.error(data.msg)
+            }
+          })
+        });
       }
     }
   }

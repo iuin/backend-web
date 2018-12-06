@@ -10,30 +10,30 @@
           </div>
           <div style="width: 60%;">
             <el-form ref="dataForm" :rules="dataRule" :model="dataForm" label-width="90px">
-              <el-form-item label="工地名称">
+              <el-form-item label="工地名称" prop="name">
                 <el-input v-model="dataForm.name"></el-input>
               </el-form-item>
               <el-row>
                 <el-col :span="12">
-                  <el-form-item label="业主姓名">
+                  <el-form-item label="业主姓名" prop="ownerName">
                     <el-input v-model="dataForm.ownerName"></el-input>
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="联系方式">
+                  <el-form-item label="联系方式" prop="ownerTel">
                     <el-input v-model="dataForm.ownerTel"></el-input>
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-row>
                 <el-col :span="12">
-                  <el-form-item label="设计师">
+                  <el-form-item label="设计师" prop="designer">
                     <el-select v-model="dataForm.designer" placeholder="请选择" filterable style="width: 100%">
                       <el-option
                         v-for="item in users"
-                        :key="item.id"
-                        :label="item.name"
-                        :value="item.id+':'+item.name"
+                        :key="item.userId"
+                        :label="item.username"
+                        :value="item.userId+':'+item.username"
                         :disabled="item.disabled">
                       </el-option>
                     </el-select>
@@ -44,25 +44,29 @@
                     <el-select v-model="dataForm.manager" placeholder="请选择" filterable style="width: 100%">
                       <el-option
                         v-for="item in users"
-                        :key="item.id"
-                        :label="item.name"
-                        :value="item.id+':'+item.name"
+                        :key="item.userId"
+                        :label="item.username"
+                        :value="item.userId+':'+item.username"
                         :disabled="item.disabled">
                       </el-option>
                     </el-select>
                   </el-form-item>
                 </el-col>
               </el-row>
-              <el-form-item label="合同时间">
-                <el-col :span="12" style="padding-right: 2px">
-                  <el-date-picker type="date" placeholder="开始时间" v-model="dataForm.startContractTime"
-                                  style="width: 100%;"></el-date-picker>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="开始时间" prop="startContractTime">
+                    <el-date-picker type="date" placeholder="开始时间" v-model="dataForm.startContractTime"
+                                    style="width: 100%;" value-format="timestamp"></el-date-picker>
+                  </el-form-item>
                 </el-col>
-                <el-col :span="12" style="padding-left: 2px">
-                  <el-date-picker type="date" placeholder="结束时间" v-model="dataForm.endContractTime"
-                                  style="width: 100%;"></el-date-picker>
+                <el-col :span="12">
+                  <el-form-item label="结束时间" prop="endContractTime">
+                    <el-date-picker type="date" placeholder="结束时间" v-model="dataForm.endContractTime"
+                                    style="width: 100%;" value-format="timestamp"></el-date-picker>
+                  </el-form-item>
                 </el-col>
-              </el-form-item>
+              </el-row>
               <el-form-item label="备注信息">
                 <el-input type="textarea" rows="5" v-model="dataForm.remark"></el-input>
               </el-form-item>
@@ -407,42 +411,39 @@
     </el-row>
     <br>
     <el-button type="primary" @click="onSubmit">保存</el-button>
+    <el-button type="default" @click="back2List">返回</el-button>
   </div>
 </template>
 
 <script>
   import SelectMaterialHead from './components/select-material-head';
+  import {geneCreateMaterials} from '../../../utils/project';
+  import ElRow from "element-ui/packages/row/src/row";
+  import {isMobile} from '../../../utils/validate';
+  const validMobile=(rule, value,callback)=>{
+    if (!value){
+      callback(new Error('请输入电话号码'))
+    }else  if (!isMobile(value)){
+      callback(new Error('请输入正确的11位手机号码'))
+    }else {
+      callback()
+    }
+  };
 
   export default {
     name: "new_project",
     data: function () {
       return {
-        users: [
-          {
-            id: 1,
-            name: '张三',
-            disabled: false
-          },
-          {
-            id: 2,
-            name: '李四',
-            disabled: false
-          },
-          {
-            id: 3,
-            name: '王麻子',
-            disabled: true
-          }
-        ],
+        users:[],
         dataForm: {
-          id:0,
+          id: 0,
           name: '',
           ownerName: '',
           ownerTel: '',
           designer: '',
           manager: '',
-          startContractTime: '',
-          endContractTime: '',
+          startContractTime: undefined,
+          endContractTime: undefined,
           remark: ''
         },
         dataRule: {
@@ -452,74 +453,121 @@
           ownerName: [
             {required: true, message: '业主信息不能为空', trigger: 'blur'}
           ],
+          ownerTel: [
+            {required: true, trigger: 'blur', validator:validMobile}
+          ],
           designer: [
             {required: true, message: '设计师不能为空', trigger: 'blur'}
           ],
           startContractTime: [
-            {required: true, message: '合同开始时间不能为空', trigger: 'blur'}
+            {required: true, message: '开始时间不能为空', trigger: 'change', type: 'date'}
           ],
           endContractTime: [
-            {required: true, message: '合同结束时间不能为空', trigger: 'blur'}
+            {required: true, message: '结束时间不能为空', trigger: 'change', type: 'date'}
           ]
         },
         //选材信息
-        materials: {
-          brick: [
-            {position: '餐客厅', brand: '', standard: '', modal: '', remark: ''},
-            {position: '厨房墙砖-地砖', brand: '', standard: '', modal: '', remark: ''},
-            {position: '主卫墙砖-地砖', brand: '', standard: '', modal: '', remark: ''},
-            {position: '次卫墙砖-地砖', brand: '', standard: '', modal: '', remark: ''},
-            {position: '生活阳台墙砖-地砖', brand: '', standard: '', modal: '', remark: ''},
-            {position: '门槛石', brand: '', standard: '', modal: '', remark: ''},
-            {position: '踢脚线', brand: '', standard: '', modal: '', remark: ''}
-          ],
-          floor: [
-            {position: '餐客厅', brand: '', standard: '', modal: '', remark: ''},
-            {position: '卧室', brand: '', standard: '', modal: '', remark: ''}
-          ],
-          door: [
-            {position: '卧室门', brand: '', standard: '', modal: '', remark: ''},
-            {position: '厨房门', brand: '', standard: '', modal: '', remark: ''},
-            {position: '主卫门', brand: '', standard: '', modal: '', remark: ''},
-            {position: '次卫门', brand: '', standard: '', modal: '', remark: ''}
-          ],
-          cupboard: [
-            {position: '台面/柜门/柜体', brand: '', standard: '', modal: '', remark: ''}
-          ],
-          wc: [
-            {position: '花洒（主-次）', brand: '', standard: '', modal: '', remark: ''},
-            {position: '蹲便/马桶（主-次）', brand: '', standard: '', modal: '', remark: ''},
-            {position: '浴室柜（主-次）', brand: '', standard: '', modal: '', remark: ''}
-          ],
-          stone: [],
-          ceiling: [
-            {position: '厨房', brand: '', standard: '', modal: '', remark: ''},
-            {position: '主卫', brand: '', standard: '', modal: '', remark: ''},
-            {position: '次卫', brand: '', standard: '', modal: '', remark: ''}
-          ],
-          paint: [
-            {position: '1色位置', brand: '', standard: '', modal: '', remark: ''},
-            {position: '2色位置', brand: '', standard: '', modal: '', remark: ''},
-            {position: '3色位置', brand: '', standard: '', modal: '', remark: ''}
-          ],
-          plaster: [
-            {position: '餐客厅', brand: '', standard: '', modal: '', remark: ''},
-            {position: '卧室', brand: '', standard: '', modal: '', remark: ''},
-          ],
-          wallpaper: [],
-          wardrobe: []
-        }
+        materials: {}
       }
     },
     components: {
+      ElRow,
       SelectMaterialHead
     },
+    computed: {
+      menuActiveName: {
+        get() {
+          return this.$store.state.common.menuActiveName
+        },
+        set(val) {
+          this.$store.commit('common/updateMenuActiveName', val)
+        }
+      },
+      mainTabs: {
+        get() {
+          return this.$store.state.common.mainTabs
+        },
+        set(val) {
+          this.$store.commit('common/updateMainTabs', val)
+        }
+      },
+      mainTabsActiveName: {
+        get() {
+          return this.$store.state.common.mainTabsActiveName
+        },
+        set(val) {
+          this.$store.commit('common/updateMainTabsActiveName', val)
+        }
+      },
+    },
+    created() {
+      this.dataForm.id = this.$route.query.id;
+      this.init();
+    },
+    activated() {
+      this.materials = geneCreateMaterials();
+      this.getAllUsers()
+    },
     methods: {
+      init(){
+        this.$nextTick(() => {
+          if (this.dataForm.id) {
+            this.$http({
+              url: this.$http.adornUrl(`/dec/project/info/${this.dataForm.id}`),
+              method: 'get',
+              params: this.$http.adornParams({type:1})
+            }).then(({data}) => {
+              if (data && data.code === 0) {
+                this.dataForm.name = data.project.name;
+                this.dataForm.ownerName = data.project.ownerName;
+                this.dataForm.ownerTel = data.project.ownerTel;
+                this.dataForm.designer = data.project.designer;
+                this.dataForm.manager = data.project.manager;
+                this.dataForm.startContractTime = new Date(data.project.startContractTime);
+                this.dataForm.endContractTime = new Date(data.project.endContractTime);
+                this.dataForm.remark = data.project.remark;
+                this.materials = data.project.materials;
+              }
+            })
+          }
+        })
+      },
       addItem(type) {
         this.materials[type].push({position: '', brand: '', standard: '', modal: '', remark: ''});
       },
       delItem(type, index) {
         this.materials[type].splice(index, 1);
+      },
+      // tabs, 删除tab
+      removeTabHandle(tabName) {
+        this.mainTabs = this.mainTabs.filter(item => item.name !== tabName);
+        if (this.mainTabs.length >= 1) {
+          // 当前选中tab被删除
+          if (tabName === this.mainTabsActiveName) {
+            let tab = this.mainTabs[this.mainTabs.length - 1];
+            this.$router.push({name: tab.name, query: tab.query, params: tab.params}, () => {
+              this.mainTabsActiveName = this.$route.name
+            })
+          }
+        } else {
+          this.menuActiveName = '';
+          this.$router.push({name: 'home'})
+        }
+      },
+      // 获取用户列表
+      getAllUsers() {
+        this.$http({
+          url: this.$http.adornUrl('/sys/user/dropdown/users'),
+          method: 'get',
+          params: this.$http.adornParams()
+        }).then(({data}) => {
+          if (data && data.code === 0) {
+            this.users = data.users;
+          } else {
+            this.users = [];
+            this.$message.error(data.msg)
+          }
+        })
       },
       onSubmit() {
         this.$refs['dataForm'].validate((valid) => {
@@ -546,7 +594,8 @@
                   type: 'success',
                   duration: 1500,
                   onClose: () => {
-                    //跳转到列表页
+                    //跳转到列表页，并关闭当前页
+                    this.back2List();
                   }
                 })
               } else {
@@ -555,7 +604,10 @@
             })
           }
         })
-
+      },
+      back2List() {
+        this.removeTabHandle(this.mainTabsActiveName);
+        this.$router.push({path: '/dec-project'});
       }
     }
   }
