@@ -30,7 +30,7 @@
                   <el-form-item label="设计师" prop="designer">
                     <el-select v-model="dataForm.designer" placeholder="请选择" filterable style="width: 100%">
                       <el-option
-                        v-for="item in users"
+                        v-for="item in designers"
                         :key="item.userId"
                         :label="item.username"
                         :value="item.userId+':'+item.username"
@@ -43,7 +43,7 @@
                   <el-form-item label="工长/PM">
                     <el-select v-model="dataForm.manager" placeholder="请选择" filterable style="width: 100%">
                       <el-option
-                        v-for="item in users"
+                        v-for="item in managers"
                         :key="item.userId"
                         :label="item.username"
                         :value="item.userId+':'+item.username"
@@ -420,12 +420,13 @@
   import {geneCreateMaterials} from '../../../utils/project';
   import ElRow from "element-ui/packages/row/src/row";
   import {isMobile} from '../../../utils/validate';
-  const validMobile=(rule, value,callback)=>{
-    if (!value){
+
+  const validMobile = (rule, value, callback) => {
+    if (!value) {
       callback(new Error('请输入电话号码'))
-    }else  if (!isMobile(value)){
+    } else if (!isMobile(value)) {
       callback(new Error('请输入正确的11位手机号码'))
-    }else {
+    } else {
       callback()
     }
   };
@@ -434,7 +435,10 @@
     name: "new_project",
     data: function () {
       return {
-        users:[],
+        DESIGNER_TITLE: 0,
+        MANAGER_TITLE: 1,
+        designers: [],
+        managers: [],
         dataForm: {
           id: 0,
           name: '',
@@ -454,7 +458,7 @@
             {required: true, message: '业主信息不能为空', trigger: 'blur'}
           ],
           ownerTel: [
-            {required: true, trigger: 'blur', validator:validMobile}
+            {required: true, trigger: 'blur', validator: validMobile}
           ],
           designer: [
             {required: true, message: '设计师不能为空', trigger: 'blur'}
@@ -504,18 +508,36 @@
       this.dataForm.id = this.$route.query.id;
       this.init();
     },
+
     activated() {
       this.materials = geneCreateMaterials();
-      this.getAllUsers()
+      let that = this;
+      this.getAllUsers(this.DESIGNER_TITLE, function (data) {//查询设计师
+          if (data && data.code === 0) {
+            that.designers = data.users;
+          } else {
+            that.designers = [];
+            this.$message.error(data.msg)
+          }
+        }
+      );
+      this.getAllUsers(this.MANAGER_TITLE, function (data) {//查询工长
+        if (data && data.code === 0) {
+          that.managers = data.users;
+        } else {
+          that.managers = [];
+          this.$message.error(data.msg)
+        }
+      });
     },
     methods: {
-      init(){
+      init() {
         this.$nextTick(() => {
           if (this.dataForm.id) {
             this.$http({
               url: this.$http.adornUrl(`/dec/project/info/${this.dataForm.id}`),
               method: 'get',
-              params: this.$http.adornParams({type:1})
+              params: this.$http.adornParams({type: 1})
             }).then(({data}) => {
               if (data && data.code === 0) {
                 this.dataForm.name = data.project.name;
@@ -555,18 +577,13 @@
         }
       },
       // 获取用户列表
-      getAllUsers() {
+      getAllUsers(title, callback) {
         this.$http({
           url: this.$http.adornUrl('/sys/user/dropdown/users'),
           method: 'get',
-          params: this.$http.adornParams()
+          params: this.$http.adornParams({title: title})
         }).then(({data}) => {
-          if (data && data.code === 0) {
-            this.users = data.users;
-          } else {
-            this.users = [];
-            this.$message.error(data.msg)
-          }
+          callback(data);
         })
       },
       onSubmit() {

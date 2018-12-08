@@ -36,6 +36,22 @@
         label="用户名">
       </el-table-column>
       <el-table-column
+        prop="mobile"
+        header-align="center"
+        align="center"
+        label="手机号">
+      </el-table-column>
+      <el-table-column
+        prop="status"
+        header-align="center"
+        width="120"
+        align="center"
+        label="岗位">
+        <template slot-scope="scope">
+          <el-tag size="small">{{scope.row.titleName}}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column
         prop="roles"
         header-align="center"
         align="center"
@@ -45,20 +61,9 @@
         </template>
       </el-table-column>
       <el-table-column
-        prop="email"
-        header-align="center"
-        align="center"
-        label="邮箱">
-      </el-table-column>
-      <el-table-column
-        prop="mobile"
-        header-align="center"
-        align="center"
-        label="手机号">
-      </el-table-column>
-      <el-table-column
         prop="status"
         header-align="center"
+        width="80"
         align="center"
         label="状态">
         <template slot-scope="scope">

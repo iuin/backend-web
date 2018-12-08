@@ -108,7 +108,6 @@
         ]
       }
     },
-    components: {},
     computed: {
       userName: {
         get() {
@@ -116,8 +115,10 @@
         }
       }
     },
-    created: {},
-    activated: {},
+    created() {},
+    mounted(){
+
+    },
     methods: {}
   }
 </script>
@@ -221,16 +222,6 @@
 
   .todo-item {
     font-size: 14px;
-  }
-
-  .todo-item-del {
-    text-decoration: line-through;
-    color: #999;
-  }
-
-  .schart {
-    width: 100%;
-    height: 300px;
   }
 
 </style>
